@@ -2,7 +2,22 @@
 include 'conexion.php';
 $mensaje = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Verificar si la conexión falló
+if (!$conexion) {
+    $mensaje = "<div class='mensaje-contenedor error' id='msg-db-error'>
+                    <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path><line x1='12' y1='9' x2='12' y2='13'></line><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>
+                    <div style='text-align: left;'>
+                        <strong>Sin conexión a base de datos:</strong><br>
+                        <span style='font-size: 0.82rem; opacity: 0.85; line-height: 1.3;'>
+                            " . (!empty(getenv("DATABASE_URL")) || !empty(getenv("DB_HOST")) 
+                                ? "Verifica las credenciales de tu base de datos remota en Vercel." 
+                                : "En producción (Vercel) necesitas una base de datos en la nube. En local (XAMPP), asegúrate de iniciar el servicio MySQL.") . "
+                        </span>
+                    </div>
+                </div>";
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && $conexion) {
     $categoria   = $_POST['categoria'];
     $stock       = $_POST['stock']; 
     $descripcion = $_POST['descripcion'];
@@ -64,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <div class="grupo-campo">
                 <label for="categoria">Categoría del Menú:</label>
-                <select id="categoria" name="categoria" required>
+                <select id="categoria" name="categoria" required <?php echo !$conexion ? 'disabled' : ''; ?>>
                     <option value="">-- Selecciona --</option>
                     <option value="Hamburguesas">Hamburguesas</option>
                     <option value="Broaster">Broaster</option>
@@ -75,21 +90,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="grupo-campo">
                 <label for="stock">Stock Disponible:</label>
-                <input type="number" id="stock" name="stock" placeholder="Cantidad disponible (ej: 50)" min="0" required>
+                <input type="number" id="stock" name="stock" placeholder="Cantidad disponible (ej: 50)" min="0" required <?php echo !$conexion ? 'disabled' : ''; ?>>
             </div>
 
             <div class="grupo-campo">
                 <label for="descripcion">Ingredientes / Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Carne de 150g, doble queso cheddar, tocino ahumado y salsa de la casa"></textarea>
+                <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Carne de 150g, doble queso cheddar, tocino ahumado y salsa de la casa" <?php echo !$conexion ? 'disabled' : ''; ?>></textarea>
             </div>
 
             <div class="grupo-campo">
                 <label for="precio">Precio de Venta (S/):</label>
-                <input type="number" id="precio" step="0.01" name="precio" placeholder="Ej: 12.50" min="0" required>
+                <input type="number" id="precio" step="0.01" name="precio" placeholder="Ej: 12.50" min="0" required <?php echo !$conexion ? 'disabled' : ''; ?>>
             </div>
 
             <div class="btn-contenedor">
-                <button type="submit" class="btn-enviar" id="btn-submit">Registrar Plato</button>
+                <button type="submit" class="btn-enviar" id="btn-submit" <?php echo !$conexion ? 'disabled style="opacity: 0.55; cursor: not-allowed; background: linear-gradient(135deg, #7f8c8d, #95a5a6); box-shadow: none;"' : ''; ?>>
+                    <?php echo !$conexion ? 'Sin Conexión' : 'Registrar Plato'; ?>
+                </button>
             </div>
 
         </form>

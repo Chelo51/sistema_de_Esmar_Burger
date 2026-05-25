@@ -27,10 +27,20 @@ if ($db_url) {
     if (getenv("DB_PORT"))     $puerto     = getenv("DB_PORT");
 }
 
-// Establecer conexión
-$conexion = new mysqli($servidor, $usuario, $password, $base_datos, $puerto);
+// Establecer conexión con manejo de excepciones desactivado para evitar errores fatales
+$conexion = null;
+$db_error = "";
 
-if ($conexion->connect_error) {
-    die("Error en la conexión a la base de datos: " . $conexion->connect_error);
+try {
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $conexion = new mysqli($servidor, $usuario, $password, $base_datos, $puerto);
+    
+    if ($conexion->connect_error) {
+        $db_error = $conexion->connect_error;
+        $conexion = null;
+    }
+} catch (Exception $e) {
+    $db_error = $e->getMessage();
+    $conexion = null;
 }
 ?>
