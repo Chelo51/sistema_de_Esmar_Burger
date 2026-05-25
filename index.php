@@ -9,18 +9,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $precio      = $_POST['precio'];
 
     if (!empty($categoria) && isset($stock) && !empty($precio)) {
-        // Aquí ya usamos 'stock' en lugar de 'nombre' para la base de datos
+        // Validación y prepared statements seguros
         $stmt = $conexion->prepare("INSERT INTO platos (categoria, stock, descripcion, precio) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("sisd", $categoria, $stock, $descripcion, $precio);
-        
-        if ($stmt->execute()) {
-            $mensaje = "<p class='success'>¡Plato registrado con éxito en XAMPP!</p>";
+        if ($stmt) {
+            $stmt->bind_param("sisd", $categoria, $stock, $descripcion, $precio);
+            
+            if ($stmt->execute()) {
+                $mensaje = "<div class='mensaje-contenedor success' id='msg-success'>
+                                <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'></polyline></svg>
+                                <span>¡Plato registrado con éxito en el sistema!</span>
+                            </div>";
+            } else {
+                $mensaje = "<div class='mensaje-contenedor error' id='msg-error'>
+                                <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>
+                                <span>Error al guardar: " . $conexion->error . "</span>
+                            </div>";
+            }
+            $stmt->close();
         } else {
-            $mensaje = "<p class='error'>Error al guardar: " . $conexion->error . "</p>";
+            $mensaje = "<div class='mensaje-contenedor error' id='msg-error'>
+                            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>
+                            <span>Error de base de datos: no se pudo preparar la consulta.</span>
+                        </div>";
         }
-        $stmt->close();
     } else {
-        $mensaje = "<p class='error'>Por favor, llena los campos obligatorios.</p>";
+        $mensaje = "<div class='mensaje-contenedor error' id='msg-error'>
+                        <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='12' y1='8' x2='12' y2='12'></line><line x1='12' y1='16' x2='12.01' y2='16'></line></svg>
+                        <span>Por favor, llena todos los campos obligatorios.</span>
+                    </div>";
     }
 }
 ?>
@@ -29,83 +45,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Formulario de Trabajo Grupal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 40px;
-            background-color: #ffffff;
-        }
-        h1 {
-            color: #3498db;
-            font-size: 24pt;
-            font-weight: normal;
-            margin-bottom: 25px;
-        }
-        h2 {
-            font-size: 16pt;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        .formulario-contenedor {
-            max-width: 450px;
-            margin: 0 auto;
-            text-align: left;
-        }
-        .grupo-campo {
-            margin-bottom: 12px;
-            display: block;
-        }
-        .grupo-campo label {
-            display: inline-block;
-            width: 40%;
-            text-align: right;
-            padding-right: 15px;
-            box-sizing: border-box;
-            font-size: 11pt;
-        }
-        .grupo-campo input, .grupo-campo select, .grupo-campo textarea {
-            width: 55%;
-            padding: 4px;
-            border: 1px solid #999;
-            box-sizing: border-box;
-            font-size: 11pt;
-            vertical-align: middle;
-        }
-        .btn-contenedor {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .btn-enviar {
-            padding: 8px 25px;
-            background-color: #f2f2f2;
-            border: 1px solid #aeaeae;
-            font-size: 11pt;
-            cursor: pointer;
-            border-radius: 2px;
-        }
-        .btn-enviar:hover {
-            background-color: #e2e2e2;
-        }
-        .success { color: green; font-weight: bold; text-align: center; margin-bottom: 15px; }
-        .error { color: red; font-weight: bold; text-align: center; margin-bottom: 15px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Platos - Esmar Burger</title>
+    <meta name="description" content="Sistema de gestión y registro de platos para el restaurante Esmar Burger.">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <h1>Formulario de Trabajo Grupal</h1>
+    <h1>Esmar <span>Burger</span></h1>
+    <p class="subtitle">Panel de Administración de Cocina</p>
     
-    <div class="formulario-contenedor">
-        <h2>Registro de Platos (Esmar Burger)</h2>
+    <main class="formulario-contenedor">
+        <h2>Registrar Nuevo Plato</h2>
         
         <?php echo $mensaje; ?>
 
         <form action="index.php" method="POST">
             
             <div class="grupo-campo">
-                <label>Categoría del Menú:</label>
-                <select name="categoria" required>
+                <label for="categoria">Categoría del Menú:</label>
+                <select id="categoria" name="categoria" required>
                     <option value="">-- Selecciona --</option>
                     <option value="Hamburguesas">Hamburguesas</option>
                     <option value="Broaster">Broaster</option>
@@ -115,26 +74,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="grupo-campo">
-                <label>Stock:</label>
-                <input type="number" name="stock" placeholder="Cantidad disponible" required>
+                <label for="stock">Stock Disponible:</label>
+                <input type="number" id="stock" name="stock" placeholder="Cantidad disponible (ej: 50)" min="0" required>
             </div>
 
             <div class="grupo-campo">
-                <label>Ingredientes / Descripción:</label>
-                <textarea name="descripcion" rows="2" placeholder="Ej: Carne + queso + jamón"></textarea>
+                <label for="descripcion">Ingredientes / Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="3" placeholder="Ej: Carne de 150g, doble queso cheddar, tocino ahumado y salsa de la casa"></textarea>
             </div>
 
             <div class="grupo-campo">
-                <label>Precio (S/):</label>
-                <input type="number" step="1" name="precio" placeholder="Ej: 12" required>
+                <label for="precio">Precio de Venta (S/):</label>
+                <input type="number" id="precio" step="0.01" name="precio" placeholder="Ej: 12.50" min="0" required>
             </div>
 
             <div class="btn-contenedor">
-                <button type="submit" class="btn-enviar">Enviar Datos</button>
+                <button type="submit" class="btn-enviar" id="btn-submit">Registrar Plato</button>
             </div>
 
         </form>
-    </div>
+    </main>
 
 </body>
 </html>
